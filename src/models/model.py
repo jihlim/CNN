@@ -283,9 +283,17 @@ def get_model(model_name, num_classes, device):
     elif model_name.lower() == "xception71":
         model = xception71(num_classes)
 
-    ####################################################################################################
-    
     return model.to(device)
 
-def load_checkpoint(checkpoint, model):
-    print()
+def load_model(cfg, model, model_name, output_path):
+    model_type = cfg["model"]["pretrained_type"]
+    checkpoint_path = os.path.join(output_path, f"{model_name}_{model_type}")
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+        start_epoch = int(checkpoint['epoch']) + 1
+        print("[INFO] \t Load the Checkpoint...")
+    else:
+        raise Exception("[INFO] \t PRETRAINED MODEL DOES NOT EXIST! Please Train a Model from Scratch!")
+    
+    return model, start_epoch

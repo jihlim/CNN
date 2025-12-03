@@ -9,7 +9,7 @@ import torch.utils.data as data
 import torchvision.datasets as datasets
 from pytz import timezone
 
-from models.model import get_model
+from models.model import get_model, load_model
 from utils.basic_utils import set_seeds, get_cfg, merge_test_args_cfg
 from utils.data_utils import *
 from utils.train_utils import get_time
@@ -44,7 +44,7 @@ def main():
 
     args = parser.parse_args()
 
-    # DDP Setting
+    # Device Setting
     global DEVICE
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("[INFO] \t DEVICE IS SET TO: ", DEVICE)
@@ -72,18 +72,14 @@ def main():
         i_size = args.image_size
 
     # Datasets
-    trainset, testset, num_classes = get_dataset(data_root, dataset_name, i_size)
+    _, testset, num_classes = get_dataset(data_root, dataset_name, i_size)
     testloader = data.DataLoader(testset, batch_size=cfg["train"]["batch_size"], shuffle=False, num_workers=0)
 
     model = get_model(model_name, num_classes, DEVICE)
     model = model.to(DEVICE)
 
     # Load Checkpoint
-    model_type = cfg["model"]["pretrained_type"]
-    checkpoint_path = os.path.join(workdir_path,f"{model_name}_{model_type}")
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-    print("[INFO] \t Load the Checkpoint...")
+    model, _ = load_model(cfg, model, model_name, workdir_path)
     
     # Criterion
     criterion = nn.CrossEntropyLoss()

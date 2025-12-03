@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 import wandb
 from torch.utils.tensorboard import SummaryWriter
 
-from models.model import get_model
+from models.model import get_model, load_model
 from utils.basic_utils import set_seeds, get_cfg, merge_args_cfg
 from utils.data_utils import *
 from utils.optimizer import get_optimizer
@@ -151,21 +151,17 @@ def main():
     # Model
     model = get_model(model_name, num_classes, DEVICE)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = get_optimizer(cfg, model)
-    scheduler = get_scheduler(cfg, optimizer)
-
-    # Checkpoint
-    checkpoint_path = os.path.join(output_path,"snapshot.pth")
+    # Load Model
     if train_continue:
-        checkpoint = torch.load(checkpoint_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        start_epoch = int(checkpoint['epoch']) + 1
+        model, start_epoch = load_model(cfg, model, model_name, output_path)
         print("[INFO] \t Continue Training the Model!")
     else:
         start_epoch = 1
         print("[INFO] \t Training the Model from Scratch!")
 
+    criterion = nn.CrossEntropyLoss()
+    optimizer = get_optimizer(cfg, model)
+    scheduler = get_scheduler(cfg, optimizer)
     
     x_epoch = []
     y_trainloss = []
@@ -190,7 +186,6 @@ def main():
         if scheduler != None:
             scheduler.step()
 
-    
         print(
             "[INFO] \t [EPOCH {}] Train Loss : {:.8f}, Train Accuracy : {:.2f}%, Test Loss : {:.8f}, Test Accuracy : {:.2f}%".format(
                 epoch, train_loss, train_accuracy, eval_loss, eval_accuracy
