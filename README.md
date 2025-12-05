@@ -8,7 +8,7 @@ The unofficial PyTorch implementation of Covolutional Neural Networks (CNN)
 ```
 $ git clone https://github.com/jihlim/CNN.git
 $ cd CNN
-$ pip install -r requirement.txt
+$ pip install -r requirements.txt
 ```
 
 ## Models
